@@ -1,0 +1,15 @@
+{
+  "name": "purescript-pux-form",
+  "version": "1.0.0",
+  "description": "",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "b123400 (i@b123400.net)",
+  "license": "MIT"
+}
