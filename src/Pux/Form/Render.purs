@@ -7,17 +7,19 @@ module Pux.Form.Render
   , asPassword
   , File
   , asFile
+  , Range
+  , asRange
   , cast
   ) where
 
-import Prelude
+import Prelude hiding (min, max)
 import Data.Int (fromString)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, wrap, unwrap)
-import Data.Lens (Lens', lens)
+import Data.Lens (Lens', lens, view, set)
 
 import Text.Smolder.HTML as HTML
-import Text.Smolder.HTML.Attributes (value, type', checked)
+import Text.Smolder.HTML.Attributes (value, type', checked, step, min, max)
 import Text.Smolder.Markup (text, (!), (#!))
 import Pux.DOM.HTML (HTML)
 import Pux.DOM.Events (DOMEvent, onChange, targetValue)
@@ -76,6 +78,23 @@ instance renderFileString :: Render File where
 
 asFile :: forall s. Lens' s String -> Lens' s File
 asFile l = (cast l) :: Lens' s File
+
+data Range = Range Int Int Int Int
+
+instance renderRange :: Render Range where
+  render toEvent (Range val min' max' step') =
+    HTML.input ! (type' "range")
+               ! (value $ show val)
+               ! (min $ show min')
+               ! (max $ show max')
+               ! (step $ show step')
+               #! onChange (\e-> case (fromString $ targetValue e) of
+                                   Nothing -> toEvent (Range val min' max' step')
+                                   Just n  -> toEvent (Range n min' max' step')
+                )
+
+asRange :: forall s. Lens' s Int -> Int -> Int -> Int -> Lens' s Range
+asRange l min max step = lens (\s-> Range (view l s) min max step) (\num (Range val _ _ _)-> set l val num)
 
 cast :: forall s a b.(Newtype a b)=> Lens' s b -> Lens' s a
 cast l = lens wrap (const unwrap) >>> l
