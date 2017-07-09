@@ -3,6 +3,8 @@ module Pux.Form.Render
   , render
   , TextArea
   , asTextArea
+  , Password
+  , asPassword
   , cast
   ) where
 
@@ -22,26 +24,27 @@ class Render a where
   render :: forall e. (a -> e) -> a -> HTML e
 
 instance renderString :: Render String where
-  render toEvent a = HTML.input ! (value a)
-                                ! (type' "text")
+  render toEvent a = HTML.input ! (type' "text")
+                                ! (value a)
                                 #! onChange (toEvent <<< targetValue)
 
 foreign import targetChecked :: DOMEvent -> Boolean
 
 instance renderBoolean :: Render Boolean where
-  render toEvent a = if a then element ! (checked "true") else element
+  render toEvent a = if a
+                     then element ! (checked "true")
+                     else element
                      where element = HTML.input ! (type' "checkbox")
                                                 #! onChange (toEvent <<< targetChecked)
 
 instance renderInt :: Render Int where
-  render toEvent a = HTML.input ! (value $ show a)
-                                ! (type' "number")
+  render toEvent a = HTML.input ! (type' "number")
+                                ! (value $ show a)
                                 #! onChange (\e-> case (fromString $ targetValue e) of
                                                     Nothing -> toEvent a
                                                     Just b  -> toEvent b)
 
 newtype TextArea = TextArea String
-
 derive instance newtypeTextArea :: Newtype TextArea _
 
 instance renderTextAreaString :: Render TextArea where
@@ -49,6 +52,17 @@ instance renderTextAreaString :: Render TextArea where
 
 asTextArea :: forall s. Lens' s String -> Lens' s TextArea
 asTextArea l = (cast l) :: Lens' s TextArea
+
+newtype Password = Password String
+derive instance newtypePassword :: Newtype Password _
+
+instance renderPasswordString :: Render Password where
+  render toEvent a = HTML.input ! (type' "password")
+                                ! (value $ unwrap a)
+                                #! onChange (toEvent <<< wrap <<< targetValue)
+
+asPassword :: forall s. Lens' s String -> Lens' s Password
+asPassword l = (cast l) :: Lens' s Password
 
 cast :: forall s a b.(Newtype a b)=> Lens' s b -> Lens' s a
 cast l = lens wrap (const unwrap) >>> l
