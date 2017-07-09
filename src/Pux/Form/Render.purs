@@ -5,6 +5,8 @@ module Pux.Form.Render
   , asTextArea
   , Password
   , asPassword
+  , File
+  , asFile
   , cast
   ) where
 
@@ -63,6 +65,17 @@ instance renderPasswordString :: Render Password where
 
 asPassword :: forall s. Lens' s String -> Lens' s Password
 asPassword l = (cast l) :: Lens' s Password
+
+newtype File = File String
+derive instance newtypeFile :: Newtype File _
+
+instance renderFileString :: Render File where
+  render toEvent a = HTML.input ! (type' "file")
+                                ! (value $ unwrap a)
+                                #! onChange (toEvent <<< wrap <<< targetValue)
+
+asFile :: forall s. Lens' s String -> Lens' s File
+asFile l = (cast l) :: Lens' s File
 
 cast :: forall s a b.(Newtype a b)=> Lens' s b -> Lens' s a
 cast l = lens wrap (const unwrap) >>> l
