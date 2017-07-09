@@ -1,6 +1,9 @@
 module Pux.Form.Render
   (class Render
   , render
+  , TextArea
+  , asTextArea
+  , cast
   ) where
 
 import Prelude
@@ -29,3 +32,16 @@ instance renderInt :: Render Int where
                                 #! onChange (\e-> case (fromString $ targetValue e) of
                                                     Nothing -> toEvent a
                                                     Just b  -> toEvent b)
+
+newtype TextArea = TextArea String
+
+derive instance newtypeTextArea :: Newtype TextArea _
+
+instance renderTextAreaString :: Render TextArea where
+  render toEvent a = HTML.textarea (text $ unwrap a) #! onChange (toEvent <<< wrap <<< targetValue)
+
+asTextArea :: forall s. Lens' s String -> Lens' s TextArea
+asTextArea l = (cast l) :: Lens' s TextArea
+
+cast :: forall s a b.(Newtype a b)=> Lens' s b -> Lens' s a
+cast l = lens wrap (const unwrap) >>> l
