@@ -13,8 +13,6 @@ import Text.Smolder.HTML as HTML
 import Text.Smolder.HTML.Attributes (value, type')
 import Text.Smolder.Markup (text, (!), (#!))
 
-data Builder s e a = Builder s (Fields s e a)
-
 data FieldsF s e a a2 = FieldsF (Lens s s a a)
                                 ((a -> e) -> a -> HTML e)
                                 (a -> Boolean)
@@ -89,11 +87,8 @@ withPred fields pred = runExists (\f-> case f of
 
 infixl 5 withPred as .?
 
-form :: forall s e a. Fields s e a -> s -> Builder s e a
-form = flip Builder
-
-renderForm :: forall s e a1. Builder s e a1 -> (s -> e) -> HTML e
-renderForm (Builder obj f) event = HTML.form inputs
+form :: forall s e a1. s -> Fields s e a1 -> (s -> e) -> HTML e
+form obj f event = HTML.form inputs
   where inputs = toInputs f
         toInputs :: forall a2. Fields s e a2 -> HTML e
         toInputs = runExists (\f'-> case f' of
