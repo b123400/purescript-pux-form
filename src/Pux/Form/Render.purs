@@ -13,6 +13,7 @@ module Pux.Form.Render
   ) where
 
 import Prelude hiding (min, max)
+import Global (readFloat)
 import Data.Int (fromString)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, wrap, unwrap)
@@ -47,6 +48,11 @@ instance renderInt :: Render Int where
                                 #! onChange (\e-> case (fromString $ targetValue e) of
                                                     Nothing -> toEvent a
                                                     Just b  -> toEvent b)
+
+instance renderNumber :: Render Number where
+  render toEvent a = HTML.input ! (type' "number")
+                                ! (value $ show a)
+                                #! onChange (toEvent <<< readFloat <<< targetValue)
 
 newtype TextArea = TextArea String
 derive instance newtypeTextArea :: Newtype TextArea _
