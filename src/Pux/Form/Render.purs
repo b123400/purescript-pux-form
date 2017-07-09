@@ -9,6 +9,8 @@ module Pux.Form.Render
   , asFile
   , Range
   , asRange
+  , RangeNum
+  , asRangeNum
   , cast
   ) where
 
@@ -101,6 +103,20 @@ instance renderRange :: Render Range where
 
 asRange :: forall s. Lens' s Int -> Int -> Int -> Int -> Lens' s Range
 asRange l min max step = lens (\s-> Range (view l s) min max step) (\num (Range val _ _ _)-> set l val num)
+
+data RangeNum = RangeNum Number Number Number Number
+
+instance renderRangeNum :: Render RangeNum where
+  render toEvent (RangeNum val min' max' step') =
+    HTML.input ! (type' "range")
+               ! (value $ show val)
+               ! (min $ show min')
+               ! (max $ show max')
+               ! (step $ show step')
+               #! onChange (\e-> toEvent (RangeNum (readFloat $ targetValue e) min' max' step'))
+
+asRangeNum :: forall s. Lens' s Number -> Number -> Number -> Number -> Lens' s RangeNum
+asRangeNum l min max step = lens (\s-> RangeNum (view l s) min max step) (\num (RangeNum val _ _ _)-> set l val num)
 
 cast :: forall s a b.(Newtype a b)=> Lens' s b -> Lens' s a
 cast l = lens wrap (const unwrap) >>> l
