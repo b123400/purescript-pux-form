@@ -34,6 +34,12 @@ instance renderString :: Render String where
                                 ! (type' "text")
                                 #! onChange (toEvent <<< targetValue)
 
+instance renderInt :: Render Int where
+  render toEvent a = HTML.input ! (value $ show a)
+                                ! (type' "number")
+                                #! onChange (\e-> case (fromString $ targetValue e) of
+                                                    Nothing -> toEvent a
+                                                    Just b  -> toEvent b)
 
 field :: forall s e a. (Render a) => Lens s s a a -> Fields s e a
 field lens = mkExists $ FieldsF lens render (const true) $ mkExists NoField
