@@ -55,15 +55,31 @@ andField a b =
 
 infixl 4 andField as .+
 
-fieldWithDOM :: forall s e a
+fieldWrapped :: forall s e a
              .  (Render a)
              => Lens s s a a
-             -> HTML e
+             -> (HTML e -> HTML e)
              -> Fields s e a
-fieldWithDOM lens dom = mkExists $ FieldsF lens customRender (const true) $ mkExists NoField
-  where customRender a b =  dom *> (render a b)
+fieldWrapped lens f = mkExists $ FieldsF lens customRender (const true) $ mkExists NoField
+  where customRender a b = f $ render a b
 
-infixl 5 fieldWithDOM as .|
+fieldWithLabel :: forall s e a
+               .  (Render a)
+               => Lens s s a a
+               -> HTML e
+               -> Fields s e a
+fieldWithLabel lens label = fieldWrapped lens (\e-> HTML.p $ HTML.label $ label *> e)
+
+fieldWithText :: forall s e a
+              .  (Render a)
+              => Lens s s a a
+              -> String
+              -> Fields s e a
+fieldWithText lens t = fieldWithLabel lens $ text t
+
+infixl 5 fieldWrapped   as .|
+infixl 5 fieldWithLabel as ./
+infixl 5 fieldWithText  as .\
 
 withPred :: forall s a e. Fields s e a -> (a -> Boolean) -> Fields s e a
 withPred fields pred = runExists (\f-> case f of
