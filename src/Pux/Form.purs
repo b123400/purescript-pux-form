@@ -1,17 +1,25 @@
-module Pux.Form where
+module Pux.Form
+  ( Fields, FieldsF
+  , field
+  , (.+), andField
+  , (.|), fieldWrapped
+  , (./), fieldWithLabel
+  , (.\), fieldWithText
+  , (.?), withPred
+  , form
+  , module Pux.Form.Render
+  ) where
 
 import Prelude
 import Data.Exists (Exists, mkExists, runExists)
-import Data.Int (fromString)
-import Data.Maybe (Maybe(..))
 import Data.Lens (Lens, view, set)
 import Partial.Unsafe (unsafePartial)
 
 import Pux.DOM.HTML (HTML)
-import Pux.DOM.Events (onChange, targetValue)
+import Text.Smolder.Markup (text)
 import Text.Smolder.HTML as HTML
-import Text.Smolder.HTML.Attributes (value, type')
-import Text.Smolder.Markup (text, (!), (#!))
+
+import Pux.Form.Render (class Render, render)
 
 data FieldsF s e a a2 = FieldsF (Lens s s a a)
                                 ((a -> e) -> a -> HTML e)
@@ -20,21 +28,6 @@ data FieldsF s e a a2 = FieldsF (Lens s s a a)
                       | NoField
 
 type Fields s e a = Exists (FieldsF s e a)
-
-class Render a where
-  render :: forall e. (a -> e) -> a -> HTML e
-
-instance renderString :: Render String where
-  render toEvent a = HTML.input ! (value a)
-                                ! (type' "text")
-                                #! onChange (toEvent <<< targetValue)
-
-instance renderInt :: Render Int where
-  render toEvent a = HTML.input ! (value $ show a)
-                                ! (type' "number")
-                                #! onChange (\e-> case (fromString $ targetValue e) of
-                                                    Nothing -> toEvent a
-                                                    Just b  -> toEvent b)
 
 field :: forall s e a. (Render a) => Lens s s a a -> Fields s e a
 field lens = mkExists $ FieldsF lens render (const true) $ mkExists NoField
