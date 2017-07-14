@@ -15,7 +15,7 @@ module Pux.Form.Render
   , choices
   , Dropdown
   , asDropdown
-  , cast
+  , asDropdown'
   ) where
 
 import Prelude hiding (min, max)
@@ -35,6 +35,7 @@ import Pux.DOM.Events (DOMEvent, onChange, targetValue)
 
 foreign import targetChecked :: DOMEvent -> Boolean
 foreign import targetSelectedIndex :: DOMEvent -> Int
+
 
 class Render a where
   render :: forall e. (a -> e) -> a -> HTML e
@@ -139,9 +140,9 @@ class (Eq a, Show a) <= MultipleChoice a where
 
 data Dropdown a = Dropdown a (Array a)
 
-instance renderMultipleChoice :: (MultipleChoice a)=> Render (Dropdown a) where
+instance renderMultipleChoice :: (Eq a, Show a)=> Render (Dropdown a) where
   render toEvent (Dropdown val choices') =
-    HTML.select #! (onChange \e-> toEvent $ Dropdown (fromMaybe val $ choices !! targetSelectedIndex e) choices')
+    HTML.select #! (onChange \e-> toEvent $ Dropdown (fromMaybe val $ choices' !! targetSelectedIndex e) choices')
                 $ foldl (*>) (text "") options
     where options = choices' <#> \c-> let elem = HTML.option $ text $ show c
                                       in if c == val then elem ! (selected "true")
@@ -150,8 +151,8 @@ instance renderMultipleChoice :: (MultipleChoice a)=> Render (Dropdown a) where
 asDropdown :: forall s a. (MultipleChoice a)=> Lens' s a -> Lens' s (Dropdown a)
 asDropdown l = asDropdown' l (choices :: Array a)
 
-asDropdown' :: forall s a. (MultipleChoice a)=> Lens' s a -> Array a -> Lens' s (Dropdown a)
+asDropdown' :: forall s a. Eq a => Show a=> Lens' s a -> Array a -> Lens' s (Dropdown a)
 asDropdown' l choices' = lens (\s-> Dropdown (view l s) choices') (\a (Dropdown b _)-> set l b a)
 
-cast :: forall s a b.(Newtype a b)=> Lens' s b -> Lens' s a
+cast :: forall s a b.(Newtype b a)=> Lens' s a -> Lens' s b
 cast l = lens wrap (const unwrap) >>> l
