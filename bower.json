@@ -16,5 +16,9 @@
   "devDependencies": {
     "purescript-psci-support": "^3.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:b123400/purescript-pux-form.git"
+  }
 }
