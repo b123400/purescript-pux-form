@@ -29,9 +29,11 @@ data FieldsF s e a a2 = FieldsF (Lens s s a a)
 
 type Fields s e a = Exists (FieldsF s e a)
 
+-- | Wraps a lens into a field, without HTML label
 field :: forall s e a. (Render a) => Lens s s a a -> Fields s e a
 field lens = mkExists $ FieldsF lens render (const true) $ mkExists NoField
 
+-- | Combine 2 fields
 andField :: forall s e a1 a2. Fields s e a1 -> Fields s e a2 -> Fields s e a2
 andField a b =
   runExists (\b'->
@@ -46,6 +48,9 @@ andField a b =
 
 infixl 4 andField as .+
 
+-- | Create a field with a lens and a function that wraps around the <input> element.
+-- | For example typical form would wrap <input> with a <label> tag.
+-- | See fieldWithLabel for example.
 fieldWrapped :: forall s e a
              .  (Render a)
              => Lens s s a a
@@ -54,6 +59,9 @@ fieldWrapped :: forall s e a
 fieldWrapped lens f = mkExists $ FieldsF lens customRender (const true) $ mkExists NoField
   where customRender a b = f $ render a b
 
+-- | Create a field with a lens and a HTML element.
+-- | The element will be added in front of the <input> element,
+-- | inside the <label> tag.
 fieldWithLabel :: forall s e a
                .  (Render a)
                => Lens s s a a
@@ -61,6 +69,7 @@ fieldWithLabel :: forall s e a
                -> Fields s e a
 fieldWithLabel lens label = fieldWrapped lens (\e-> HTML.p $ HTML.label $ label *> e)
 
+-- | Create a field with a lens and a String that is used as the label.
 fieldWithText :: forall s e a
               .  (Render a)
               => Lens s s a a
@@ -72,6 +81,8 @@ infixl 5 fieldWrapped   as .|
 infixl 5 fieldWithLabel as ./
 infixl 5 fieldWithText  as .\
 
+-- | Add a condition to the field.
+-- | If the condition does not match, the field won't be updated.
 withPred :: forall s a e. Fields s e a -> (a -> Boolean) -> Fields s e a
 withPred fields pred = runExists (\f-> case f of
     (FieldsF lens ren _ next) -> mkExists $ FieldsF lens ren pred next
@@ -80,6 +91,7 @@ withPred fields pred = runExists (\f-> case f of
 
 infixl 5 withPred as .?
 
+-- | Turns fields into the form HTML.
 form :: forall s e a1. s -> Fields s e a1 -> (s -> e) -> HTML e
 form obj f event = HTML.form inputs
   where inputs = toInputs f
