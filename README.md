@@ -12,9 +12,15 @@ bower install purescript-pux-form
 
 Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-pux-form).
 
+## Example
+
+Example code is avaliable at https://github.com/b123400/purescript-pux-form-example
+
+Live version of the example: https://b123400.github.io/purescript-pux-form-example/
+
 ## Tutorial
 
-Normally when you are making a form, you need to create Events like `UpdateUsername` `UpdatePassword` which are binded to form elements, and have to implement related handler in `foldp`. This library handles the form generation, all you need is a simple `Update` event.
+Normally when you are making a form, you need to create Events like `UpdateUsername` `UpdatePassword` which are binded to form elements, and have to implement related handlers in `foldp`. This library handles the form generation, all you need is a simple `Update` event.
 
 ### Prepare the state
 
