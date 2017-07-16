@@ -38,42 +38,42 @@ foreign import targetSelectedIndex :: DOMEvent -> Int
 
 
 class Render a where
-  render :: forall e. (a -> e) -> a -> HTML e
+  render :: a -> HTML a
 
 
 instance renderString :: Render String where
-  render toEvent a = HTML.input ! (type' "text")
+  render a = HTML.input ! (type' "text")
                                 ! (value a)
-                                #! onChange (toEvent <<< targetValue)
+                                #! onChange targetValue
 
 
 instance renderBoolean :: Render Boolean where
-  render toEvent a = if a
+  render a = if a
                      then element ! (checked "true")
                      else element
                      where element = HTML.input ! (type' "checkbox")
-                                                #! onChange (toEvent <<< targetChecked)
+                                                #! onChange targetChecked
 
 
 instance renderInt :: Render Int where
-  render toEvent a = HTML.input ! (type' "number")
+  render a = HTML.input ! (type' "number")
                                 ! (value $ show a)
                                 #! onChange (\e-> case (fromString $ targetValue e) of
-                                                    Nothing -> toEvent a
-                                                    Just b  -> toEvent b)
+                                                    Nothing -> a
+                                                    Just b  -> b)
 
 
 instance renderNumber :: Render Number where
-  render toEvent a = HTML.input ! (type' "number")
+  render a = HTML.input ! (type' "number")
                                 ! (value $ show a)
-                                #! onChange (toEvent <<< readFloat <<< targetValue)
+                                #! onChange (readFloat <<< targetValue)
 
 
 newtype TextArea = TextArea String
 derive instance newtypeTextArea :: Newtype TextArea _
 
 instance renderTextAreaString :: Render TextArea where
-  render toEvent a = HTML.textarea (text $ unwrap a) #! onChange (toEvent <<< wrap <<< targetValue)
+  render a = HTML.textarea (text $ unwrap a) #! onChange (wrap <<< targetValue)
 
 asTextArea :: forall s. Lens' s String -> Lens' s TextArea
 asTextArea l = (cast l) :: Lens' s TextArea
@@ -83,9 +83,9 @@ newtype Password = Password String
 derive instance newtypePassword :: Newtype Password _
 
 instance renderPasswordString :: Render Password where
-  render toEvent a = HTML.input ! (type' "password")
+  render a = HTML.input ! (type' "password")
                                 ! (value $ unwrap a)
-                                #! onChange (toEvent <<< wrap <<< targetValue)
+                                #! onChange (wrap <<< targetValue)
 
 asPassword :: forall s. Lens' s String -> Lens' s Password
 asPassword l = (cast l) :: Lens' s Password
@@ -95,9 +95,9 @@ newtype File = File String
 derive instance newtypeFile :: Newtype File _
 
 instance renderFileString :: Render File where
-  render toEvent a = HTML.input ! (type' "file")
+  render a = HTML.input ! (type' "file")
                                 ! (value $ unwrap a)
-                                #! onChange (toEvent <<< wrap <<< targetValue)
+                                #! onChange (wrap <<< targetValue)
 
 asFile :: forall s. Lens' s String -> Lens' s File
 asFile l = (cast l) :: Lens' s File
@@ -105,15 +105,15 @@ asFile l = (cast l) :: Lens' s File
 data Range = Range Int Int Int Int
 
 instance renderRange :: Render Range where
-  render toEvent (Range val min' max' step') =
+  render (Range val min' max' step') =
     HTML.input ! (type' "range")
                ! (value $ show val)
                ! (min $ show min')
                ! (max $ show max')
                ! (step $ show step')
                #! onChange (\e-> case (fromString $ targetValue e) of
-                                   Nothing -> toEvent (Range val min' max' step')
-                                   Just n  -> toEvent (Range n min' max' step')
+                                   Nothing -> Range val min' max' step'
+                                   Just n  -> Range n min' max' step'
                 )
 
 asRange :: forall s. Lens' s Int -> Int -> Int -> Int -> Lens' s Range
@@ -123,13 +123,13 @@ asRange l min max step = lens (\s-> Range (view l s) min max step) (\num (Range 
 data RangeNum = RangeNum Number Number Number Number
 
 instance renderRangeNum :: Render RangeNum where
-  render toEvent (RangeNum val min' max' step') =
+  render (RangeNum val min' max' step') =
     HTML.input ! (type' "range")
                ! (value $ show val)
                ! (min $ show min')
                ! (max $ show max')
                ! (step $ show step')
-               #! onChange \e-> toEvent $ RangeNum (readFloat $ targetValue e) min' max' step'
+               #! onChange \e-> RangeNum (readFloat $ targetValue e) min' max' step'
 
 asRangeNum :: forall s. Lens' s Number -> Number -> Number -> Number -> Lens' s RangeNum
 asRangeNum l min max step = lens (\s-> RangeNum (view l s) min max step) (\num (RangeNum val _ _ _)-> set l val num)
@@ -141,8 +141,8 @@ class (Eq a, Show a) <= MultipleChoice a where
 data Dropdown a = Dropdown a (Array a)
 
 instance renderMultipleChoice :: (Eq a, Show a)=> Render (Dropdown a) where
-  render toEvent (Dropdown val choices') =
-    HTML.select #! (onChange \e-> toEvent $ Dropdown (fromMaybe val $ choices' !! targetSelectedIndex e) choices')
+  render (Dropdown val choices') =
+    HTML.select #! (onChange \e-> Dropdown (fromMaybe val $ choices' !! targetSelectedIndex e) choices')
                 $ foldl (*>) (text "") options
     where options = choices' <#> \c-> let elem = HTML.option $ text $ show c
                                       in if c == val then elem ! (selected "true")
