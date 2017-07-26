@@ -16,6 +16,8 @@ module Pux.Form.Render
   , Dropdown
   , asDropdown
   , asDropdown'
+  , WithNothing
+  , withNothing
   ) where
 
 import Prelude hiding (min, max)
@@ -25,7 +27,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (class Newtype, wrap, unwrap)
 import Data.Lens (Lens', lens, view, set)
 import Data.Foldable (foldl)
-import Data.Array ((!!))
+import Data.Array ((!!), (:))
 
 import Text.Smolder.HTML as HTML
 import Text.Smolder.HTML.Attributes (value, type', checked, step, min, max, selected)
@@ -153,6 +155,21 @@ asDropdown = lens (\a-> Dropdown a choices) (\_ (Dropdown a _) -> a)
 
 asDropdown' :: forall s a. Eq a => Show a => Array a -> Lens' a (Dropdown a)
 asDropdown' choices' = lens (\a-> Dropdown a choices') (\_ (Dropdown a _)-> a)
+
+
+newtype WithNothing a = WithNothing (Maybe a)
+derive instance newtypeWithNothing :: Newtype (WithNothing a) _
+derive instance eqWithNothing :: Eq a => Eq (WithNothing a)
+
+withNothing :: forall a. Lens' (Maybe a) (WithNothing a)
+withNothing = lens wrap $ const unwrap
+
+instance multipleChoiceWithNothing :: MultipleChoice a => MultipleChoice (WithNothing a) where
+  choices = (WithNothing Nothing) : ((WithNothing <<< Just) <$> choices)
+
+instance showWithNothing :: Show a => Show (WithNothing a) where
+  show (WithNothing Nothing) = "None"
+  show (WithNothing (Just a)) = show a
 
 
 cast :: forall a b.(Newtype b a)=> Lens' a b
