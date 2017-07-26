@@ -75,8 +75,8 @@ derive instance newtypeTextArea :: Newtype TextArea _
 instance renderTextAreaString :: Render TextArea where
   render a = HTML.textarea (text $ unwrap a) #! onChange (wrap <<< targetValue)
 
-asTextArea :: forall s. Lens' s String -> Lens' s TextArea
-asTextArea l = (cast l) :: Lens' s TextArea
+asTextArea :: Lens' String TextArea
+asTextArea = cast :: Lens' String TextArea
 
 
 newtype Password = Password String
@@ -87,8 +87,8 @@ instance renderPasswordString :: Render Password where
                                 ! (value $ unwrap a)
                                 #! onChange (wrap <<< targetValue)
 
-asPassword :: forall s. Lens' s String -> Lens' s Password
-asPassword l = (cast l) :: Lens' s Password
+asPassword :: Lens' String Password
+asPassword = cast :: Lens' String Password
 
 
 newtype File = File String
@@ -99,40 +99,40 @@ instance renderFileString :: Render File where
                                 ! (value $ unwrap a)
                                 #! onChange (wrap <<< targetValue)
 
-asFile :: forall s. Lens' s String -> Lens' s File
-asFile l = (cast l) :: Lens' s File
+asFile :: Lens' String File
+asFile = cast :: Lens' String File
 
 data Range = Range Int Int Int Int
 
 instance renderRange :: Render Range where
-  render (Range val min' max' step') =
+  render (Range min' max' step' val) =
     HTML.input ! (type' "range")
                ! (value $ show val)
                ! (min $ show min')
                ! (max $ show max')
                ! (step $ show step')
                #! onChange (\e-> case (fromString $ targetValue e) of
-                                   Nothing -> Range val min' max' step'
-                                   Just n  -> Range n min' max' step'
+                                   Nothing -> Range min' max' step' val
+                                   Just n  -> Range min' max' step' n
                 )
 
-asRange :: forall s. Lens' s Int -> Int -> Int -> Int -> Lens' s Range
-asRange l min max step = lens (\s-> Range (view l s) min max step) (\num (Range val _ _ _)-> set l val num)
+asRange :: Int -> Int -> Int -> Lens' Int Range
+asRange min max step = lens (Range min max step) (\_ (Range _ _ _ val)-> val)
 
 
 data RangeNum = RangeNum Number Number Number Number
 
 instance renderRangeNum :: Render RangeNum where
-  render (RangeNum val min' max' step') =
+  render (RangeNum min' max' step' val) =
     HTML.input ! (type' "range")
                ! (value $ show val)
                ! (min $ show min')
                ! (max $ show max')
                ! (step $ show step')
-               #! onChange \e-> RangeNum (readFloat $ targetValue e) min' max' step'
+               #! onChange \e-> RangeNum min' max' step' $ readFloat $ targetValue e
 
-asRangeNum :: forall s. Lens' s Number -> Number -> Number -> Number -> Lens' s RangeNum
-asRangeNum l min max step = lens (\s-> RangeNum (view l s) min max step) (\num (RangeNum val _ _ _)-> set l val num)
+asRangeNum :: Number -> Number -> Number -> Lens' Number RangeNum
+asRangeNum min max step = lens (RangeNum min max step) (\_ (RangeNum _ _ _ val)-> val)
 
 
 class (Eq a, Show a) <= MultipleChoice a where
@@ -148,11 +148,12 @@ instance renderMultipleChoice :: (Eq a, Show a)=> Render (Dropdown a) where
                                       in if c == val then elem ! (selected "true")
                                          else elem
 
-asDropdown :: forall s a. (MultipleChoice a)=> Lens' s a -> Lens' s (Dropdown a)
-asDropdown l = asDropdown' l (choices :: Array a)
+asDropdown :: forall a. MultipleChoice a => Lens' a (Dropdown a)
+asDropdown = lens (\a-> Dropdown a choices) (\_ (Dropdown a _) -> a)
 
-asDropdown' :: forall s a. Eq a => Show a=> Lens' s a -> Array a -> Lens' s (Dropdown a)
-asDropdown' l choices' = lens (\s-> Dropdown (view l s) choices') (\a (Dropdown b _)-> set l b a)
+asDropdown' :: forall s a. Eq a => Show a => Array a -> Lens' a (Dropdown a)
+asDropdown' choices' = lens (\a-> Dropdown a choices') (\_ (Dropdown a _)-> a)
 
-cast :: forall s a b.(Newtype b a)=> Lens' s a -> Lens' s b
-cast l = lens wrap (const unwrap) >>> l
+
+cast :: forall a b.(Newtype b a)=> Lens' a b
+cast = lens wrap $ const unwrap
