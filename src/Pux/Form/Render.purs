@@ -1,5 +1,5 @@
 module Pux.Form.Render
-  (class Render
+  ( class Render
   , render
   , TextArea
   , asTextArea
@@ -18,6 +18,8 @@ module Pux.Form.Render
   , asDropdown'
   , WithNothing
   , withNothing
+  , ConstButton
+  , asConstButton
   ) where
 
 import Prelude hiding (min, max)
@@ -33,7 +35,7 @@ import Text.Smolder.HTML as HTML
 import Text.Smolder.HTML.Attributes (value, type', checked, step, min, max, selected)
 import Text.Smolder.Markup (text, (!), (#!))
 import Pux.DOM.HTML (HTML)
-import Pux.DOM.Events (DOMEvent, onChange, targetValue)
+import Pux.DOM.Events (DOMEvent, onChange, onClick, targetValue)
 
 foreign import targetChecked :: DOMEvent -> Boolean
 foreign import targetSelectedIndex :: DOMEvent -> Int
@@ -45,30 +47,30 @@ class Render a where
 
 instance renderString :: Render String where
   render a = HTML.input ! (type' "text")
-                                ! (value a)
-                                #! onChange targetValue
+                        ! (value a)
+                        #! onChange targetValue
 
 
 instance renderBoolean :: Render Boolean where
   render a = if a
-                     then element ! (checked "true")
-                     else element
-                     where element = HTML.input ! (type' "checkbox")
-                                                #! onChange targetChecked
+             then element ! (checked "true")
+             else element
+             where element = HTML.input ! (type' "checkbox")
+                                        #! onChange targetChecked
 
 
 instance renderInt :: Render Int where
   render a = HTML.input ! (type' "number")
-                                ! (value $ show a)
-                                #! onChange (\e-> case (fromString $ targetValue e) of
-                                                    Nothing -> a
-                                                    Just b  -> b)
+                        ! (value $ show a)
+                        #! onChange (\e-> case (fromString $ targetValue e) of
+                                            Nothing -> a
+                                            Just b  -> b)
 
 
 instance renderNumber :: Render Number where
   render a = HTML.input ! (type' "number")
-                                ! (value $ show a)
-                                #! onChange (readFloat <<< targetValue)
+                        ! (value $ show a)
+                        #! onChange (readFloat <<< targetValue)
 
 
 newtype TextArea = TextArea String
@@ -86,8 +88,8 @@ derive instance newtypePassword :: Newtype Password _
 
 instance renderPasswordString :: Render Password where
   render a = HTML.input ! (type' "password")
-                                ! (value $ unwrap a)
-                                #! onChange (wrap <<< targetValue)
+                        ! (value $ unwrap a)
+                        #! onChange (wrap <<< targetValue)
 
 asPassword :: Lens' String Password
 asPassword = cast :: Lens' String Password
@@ -98,8 +100,8 @@ derive instance newtypeFile :: Newtype File _
 
 instance renderFileString :: Render File where
   render a = HTML.input ! (type' "file")
-                                ! (value $ unwrap a)
-                                #! onChange (wrap <<< targetValue)
+                        ! (value $ unwrap a)
+                        #! onChange (wrap <<< targetValue)
 
 asFile :: Lens' String File
 asFile = cast :: Lens' String File
@@ -153,8 +155,19 @@ instance renderMultipleChoice :: (Eq a, Show a)=> Render (Dropdown a) where
 asDropdown :: forall a. MultipleChoice a => Lens' a (Dropdown a)
 asDropdown = lens (\a-> Dropdown a choices) (\_ (Dropdown a _) -> a)
 
-asDropdown' :: forall s a. Eq a => Show a => Array a -> Lens' a (Dropdown a)
+asDropdown' :: forall a. Eq a => Show a => Array a -> Lens' a (Dropdown a)
 asDropdown' choices' = lens (\a-> Dropdown a choices') (\_ (Dropdown a _)-> a)
+
+
+asConstButton :: forall a. a -> String -> Lens' a (ConstButton a)
+asConstButton val text = lens (const $ ConstButton val text) (\_ (ConstButton a _)-> a)
+
+data ConstButton a =  ConstButton a String
+
+instance renderMaybe :: Render (ConstButton a) where
+  render (ConstButton val text) = HTML.input ! (type' "button")
+                                             ! (value text)
+                                            #! onClick (const $ ConstButton val text)
 
 
 newtype WithNothing a = WithNothing (Maybe a)
