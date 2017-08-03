@@ -70,11 +70,11 @@ view (s@State s') =
     p $ text ("Alive? "        <> show s'.alive)
     form s fields Replace
   where fields = name                   .\ "Enter name"
-              .+ age                    .\ "Enter age" .? (_ < 100)  -- Field with condition
-              .+ (asRange age 10 100 2) .\ "Input age as Range"      -- Custom input field
-              .+ (asPassword password)  .\ "Enter your password"     -- String in password field
-              .+ (asTextArea biography) ./ (b $ text "Enter biography in text area") -- Label with custom HTML
-              .+ alive                  .\ "Are you alive?"
+              <> age                    .\ "Enter age"    -- Number input field
+              <> (age <<< asRange 10 100 2) .\ "Input age as Range"      -- Custom input field
+              <> (password <<< asPassword)  .\ "Enter your password"     -- String in password field
+              <> (biography <<< asTextArea) ./ (b $ text "Enter biography in text area") -- Label with custom HTML
+              <> alive                  .\ "Are you alive?"
 
 ```
 
@@ -94,6 +94,14 @@ You can customize the input type by wrapping the lens.
 - `asRange` wraps `Lens s Int` and is rendered as `<input type="range">`
 - `asRangeNum` wraps `Lens s Num` and is rendered as `<input type="range">`
 
+### Constant Value
+
+- `asConstButton` creates a button which sets the value to a constant value when clicked.
+
+```purescript
+field $ age <<< asConstButton 20 "Set age to 20"
+```
+
 ### Multiple choice
 
 Mutliple choice input can be created with `asDropdown` and `asDropdown'`.
@@ -111,11 +119,11 @@ instance showGender :: Show Gender where
   show Female = "Female"
   show Secret = "Secret"
 
-view s = form s (field $ asDropdown gender) Replace
+view s = form s (field $ gender <<< asDropdown) Replace
 ```
 
 Or if it is `Show a` you can supply an Array of `a` to `asDropdown'`.
 
 ```purescript
-asDropdown' gender [Male, Female, Secret]
+gender <<< asDropdown' [Male, Female, Secret]
 ```
