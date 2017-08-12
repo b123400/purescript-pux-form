@@ -27,7 +27,7 @@ import Global (readFloat)
 import Data.Int (fromString)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (class Newtype, wrap, unwrap)
-import Data.Lens (Lens', lens, view, set)
+import Data.Lens (Lens', lens)
 import Data.Foldable (foldl)
 import Data.Array ((!!), (:))
 
