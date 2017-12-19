@@ -1,5 +1,7 @@
 # purescript-pux-form
 
+![Travis](https://api.travis-ci.org/b123400/purescript-pux-form.svg?branch=master)
+
 A library to generate forms for [Pux](http://purescript-pux.org) with lens.
 
 ## Installation
