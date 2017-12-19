@@ -4,4 +4,4 @@ exports.targetChecked = function(e) {
 
 exports.targetSelectedIndex = function(e) {
   return e.target.selectedIndex;
-}
+};

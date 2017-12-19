@@ -9,23 +9,21 @@ module Pux.Form
   ) where
 
 import Prelude
-import Data.Exists (Exists, mkExists, runExists)
-import Data.Lens (Lens', view, set)
+
 import Data.CatList (CatList)
+import Data.Exists (Exists, mkExists, runExists)
 import Data.Foldable (foldl)
-
+import Data.Lens (Lens', set, view)
 import Pux.DOM.HTML (HTML, mapEvent)
-import Text.Smolder.Markup (text)
-import Text.Smolder.HTML as HTML
-
 import Pux.Form.Render (class Render, render)
+import Text.Smolder.HTML as HTML
+import Text.Smolder.Markup (text)
 
 data FieldF s e a = FieldF (Lens' s a)
                            (a -> HTML a)
                            (HTML e -> HTML e)
 
 type Field s e = Exists (FieldF s e)
-
 type Fields s e = CatList (Field s e)
 
 -- | Wraps a lens into a field, without HTML label
@@ -50,7 +48,7 @@ fieldWithLabel :: forall s e a
                => Lens' s a
                -> HTML e
                -> Fields s e
-fieldWithLabel lens label = fieldWrapped lens (\e-> HTML.p $ HTML.label $ label *> e)
+fieldWithLabel lens label = fieldWrapped lens (HTML.p <<< HTML.label <<< ((*>) label))
 
 -- | Create a field with a lens and a String that is used as the label.
 fieldWithText :: forall s e a
