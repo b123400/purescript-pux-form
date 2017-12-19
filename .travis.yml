@@ -1,0 +1,8 @@
+language: node_js
+node_js:
+  - "8"
+  - "lts/*"
+script:
+- npm install -g pulp purescript bower
+- bower install
+- npm run build

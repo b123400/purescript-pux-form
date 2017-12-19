@@ -8,6 +8,7 @@
   "dependencies": {},
   "devDependencies": {},
   "scripts": {
+    "build": "pulp build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "b123400 (i@b123400.net)",
