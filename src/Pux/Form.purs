@@ -28,7 +28,7 @@ type Fields s e = CatList (Field s e)
 
 -- | Wraps a lens into a field, without HTML label
 field :: forall s e a. (Render a) => Lens' s a -> Fields s e
-field lens = pure $ mkExists $ FieldF lens render id
+field lens = pure $ mkExists $ FieldF lens render identity
 
 -- | Create a field with a lens and a function that wraps around the <input> element.
 -- | For example typical form would wrap <input> with a <label> tag.
@@ -58,9 +58,9 @@ fieldWithText :: forall s e a
               -> Fields s e
 fieldWithText lens t = fieldWithLabel lens $ text t
 
-infixl 5 fieldWrapped   as .|
-infixl 5 fieldWithLabel as ./
-infixl 5 fieldWithText  as .\
+infixl 6 fieldWrapped   as .|
+infixl 6 fieldWithLabel as ./
+infixl 6 fieldWithText  as .\
 
 -- | Turns fields into the form HTML.
 form :: forall s e. s -> Fields s e -> (s -> e) -> HTML e
